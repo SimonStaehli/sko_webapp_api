@@ -3,6 +3,7 @@ from model import CustomModel
 from flask import Flask
 from flask import request, jsonify
 import pandas as pd
+import os
 
 app = Flask(__name__)
 transformer = CustomTransformer()
@@ -15,6 +16,16 @@ def check():
     """
     if request.method == 'GET':
         return jsonify(200)
+
+
+@app.route('/get_all_models', methods=['GET'])
+def check():
+    """
+    Prediction Endpoint. Returns Predictions for POST Request. Reachable by POST-Request.
+    """
+    if request.method == 'GET':
+        return jsonify(os.listdir('src'))
+
 
 # Finish and write testscript
 @app.route('/create_model', methods=['PUT'])
@@ -166,7 +177,6 @@ def model_params(id):
             return jsonify('Datatype not valid. Be Sure to input list in format: [X, y]')
 
         return jsonify(model_params)
-
 
 
 if __name__ == '__main__':
