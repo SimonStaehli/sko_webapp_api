@@ -3,20 +3,9 @@ from model import CustomModel
 from flask import Flask
 from flask import request, jsonify
 import pandas as pd
-import git
 
 app = Flask(__name__)
 transformer = CustomTransformer()
-
-@app.route('/git_update', methods=['POST'])
-def git_update():
-    repo = git.Repo('./sko_webapp_api')
-    origin = repo.remotes.origin
-    repo.create_head('main',
-                     origin.refs.main).set_tracking_branch(origin.refs.main).checkout()
-    origin.pull()
-
-    return '', 200
 
 
 @app.route('/check', methods=['GET'])
