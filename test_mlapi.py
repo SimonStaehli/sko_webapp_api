@@ -1,4 +1,4 @@
-from sklearn.linear_model import Lasso
+from sklearn.linear_model import LinearRegression
 from sklearn.datasets import load_boston
 import numpy as np
 import pandas as pd
@@ -11,15 +11,19 @@ import pytest
 # Please make sure the api.py is running throughout the test
 # otherwise the test will fail!
 
+# Save same model as pickle file
 # Pre-Setup for test
 test_digits = 6
 X, y = load_boston(return_X_y=True)
-model = Lasso(alpha=0)
-model.fit(X, y)
 
-# Save same model as pickle file
-with open('./src/model_1.pkl', 'wb') as model_file:
-    pickle.dump(obj=model, file=model_file)
+if 'model_1.pkl' not in os.listdir('src'):
+    model = LinearRegression()
+    model.fit(X, y)
+    with open('./src/model_1.pkl', 'wb') as model_file:
+        pickle.dump(obj=model, file=model_file)
+else:
+    with open('./src/model_1.pkl', 'rb') as model_file:
+        model = pickle.load(file=model_file)
 
 # Map Correct references for the model to check in tests
 prediction_ref = model.predict(X)
