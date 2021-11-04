@@ -29,7 +29,7 @@ model_params = model.__dict__
 
 del model
 
-base_url = 'http://127.0.0.1:5000/'
+base_url = 'https://sko-webapp.herokuapp.com/'
 
 ############## Test Part ###############
 data_X = pd.DataFrame(X)
