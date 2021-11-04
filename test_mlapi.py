@@ -1,4 +1,4 @@
-from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import Ridge
 from sklearn.datasets import load_boston
 import numpy as np
 import pandas as pd
@@ -17,7 +17,7 @@ test_digits = 6
 X, y = load_boston(return_X_y=True)
 
 if 'model_1.pkl' not in os.listdir('src'):
-    model = LinearRegression()
+    model = Ridge(alpha=0)
     model.fit(X, y)
     with open('./src/model_1.pkl', 'wb') as model_file:
         pickle.dump(obj=model, file=model_file)
@@ -105,18 +105,16 @@ def test_update_endpoint(coef_refer=coef_ref):
     response = requests.put(url=base_url + '/update_model/1', json={'params': new_coef})
     assert response.status_code == 200
 
-    with open('./src/model_1.pkl', 'rb') as pkl_file:
-        reference_model = pickle.load(pkl_file)
-        coef_refer = reference_model.coef_
+    response = requests.get(url=base_url + '/model_coef/1')
 
-    np.testing.assert_array_almost_equal(x=coef_refer, y=new_coef,
+    np.testing.assert_array_almost_equal(x=np.array(response.json()), y=new_coef,
                                          decimal=test_digits, verbose=True)
 
 def test_create_model_endpoint():
     """
     Function checks create_model endpoint of the API
     """
-    models_before = os.listdir('src')
+    models_before = requests.get(url=base_url + '/get_all_models')
 
     new_params = {'alpha': 1}
     response = requests.put(url=base_url + '/create_model', json=new_params)
@@ -124,7 +122,6 @@ def test_create_model_endpoint():
 
     assert response.status_code == 200
     assert f'model_{new_model_id}.pkl' not in models_before
-    assert f'model_{new_model_id}.pkl' in os.listdir('src')
 
 
 def test_delete_endpoint():
