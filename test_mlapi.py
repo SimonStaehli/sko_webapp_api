@@ -128,7 +128,13 @@ def test_delete_endpoint():
     """
     Function checks delete_model endpoint of the API
     """
-    response = requests.delete(url=base_url + '/delete_model/1')
+    models_api = requests.get(url=base_url + '/get_all_models')
+    models_api = models_api.json()
+    model_delete = [m.split('.')[0] for m in models_api]
+    model_delete = [m[-1] for m in model_delete]
+    print(model_delete)
+
+    response = requests.delete(url=base_url + f'/delete_model/{model_delete}')
 
     assert response.status_code == 200
     assert 'model.pkl' not in os.listdir()
