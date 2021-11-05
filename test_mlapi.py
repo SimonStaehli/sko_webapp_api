@@ -119,6 +119,7 @@ def test_create_model_endpoint():
     new_params = {'alpha': 1}
     response = requests.put(url=base_url + '/create_model', json=new_params)
     new_model_id = response.json()['model_id']
+    response = requests.delete(url=base_url + f'/delete_model/{new_model_id}')
 
     assert response.status_code == 200
     assert f'model_{new_model_id}.pkl' not in models_before
@@ -128,16 +129,14 @@ def test_delete_endpoint():
     """
     Function checks delete_model endpoint of the API
     """
-    models_api = requests.get(url=base_url + '/get_all_models')
-    models_api = models_api.json()
-    model_delete = [m.split('.')[0] for m in models_api]
-    model_delete = [m[-1] for m in model_delete]
-    print(model_delete)
+    new_params = {'alpha': 1}
+    response = requests.put(url=base_url + '/create_model', json=new_params)
+    new_model_id = response.json()['model_id']
 
-    response = requests.delete(url=base_url + f'/delete_model/{model_delete}')
+    response = requests.delete(url=base_url + f'/delete_model/{new_model_id}')
 
     assert response.status_code == 200
-    assert 'model.pkl' not in os.listdir()
+    assert f'model_{new_model_id}.pkl' not in os.listdir()
 
 
 if __name__ == '__main__':
