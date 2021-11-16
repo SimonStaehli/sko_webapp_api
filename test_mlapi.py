@@ -1,11 +1,14 @@
 from sklearn.linear_model import Ridge
 from sklearn.datasets import load_boston
+from api import app
 import numpy as np
 import pandas as pd
-import requests
 import pickle
 import os
 import pytest
+
+app.config['TESTING'] = True
+app = app.test_client()
 
 # Note:
 # Please make sure the api.py is running throughout the test
@@ -33,8 +36,6 @@ model_params = model.__dict__
 
 del model
 
-base_url = 'http://127.0.0.1:5000/'
-
 ############## Test Part ###############
 data_X = pd.DataFrame(X)
 data_X = data_X.to_json(orient='records')
@@ -45,19 +46,19 @@ def test_endpoint_con():
     """
     Function checks check endpoint of the API
     """
-    response = requests.get(url=base_url + '/check')
+    response = app.get('/check')
 
-    assert response.json() == 200
+    assert response.get_json() == 200
 
 
 def test_predict_endpoint():
     """
     Function checks predict endpoint of the API
     """
-    response = requests.post(url=base_url + '/predict/1', json=data_X)
+    response = app.post('/predict/1', json=data_X)
 
     assert response.status_code == 200
-    np.testing.assert_almost_equal(actual=np.array(response.json()), desired=prediction_ref,
+    np.testing.assert_almost_equal(actual=np.array(response.get_json()), desired=prediction_ref,
                                    decimal=test_digits, verbose=True)
 
 
@@ -67,18 +68,18 @@ def test_score_endpoint():
     """
     data_ = dict(X=data_X, y=data_y)
 
-    response = requests.post(url=base_url + '/score/1', json=data_)
+    response = app.post('/score/1', json=data_)
     assert response.status_code == 200
-    assert round(response.json(), 6) == round(score_ref, 6)
+    assert round(response.get_json(), 6) == round(score_ref, 6)
 
 
 def test_coef_endpoint(coef_refer=coef_ref):
     """
     Function checks model_coef endpoint of the API
     """
-    response = requests.get(url=base_url + '/model_coef/1')
+    response = app.get('/model_coef/1')
     assert response.status_code == 200
-    np.testing.assert_almost_equal(actual=np.array(response.json()), desired=coef_refer,
+    np.testing.assert_almost_equal(actual=np.array(response.get_json()), desired=coef_refer,
                                    decimal=test_digits, verbose=True)
 
 
@@ -86,8 +87,8 @@ def test_parameters_endpoint(model_parameters=model_params):
     """
     Function checks model_params endpoint of the API
     """
-    response = requests.get(url=base_url + '/model_params/1')
-    params = response.json()
+    response = app.get('/model_params/1')
+    params = response.get_json()
 
     assert response.status_code == 200
     for key in model_parameters.keys():
@@ -102,27 +103,27 @@ def test_update_endpoint(coef_refer=coef_ref):
     Function checks update_model endpoint of the API
     """
     new_coef = np.random.uniform(size=len(coef_refer)).tolist()
-    response = requests.put(url=base_url + '/update_model/1', json={'params': new_coef})
+    response = app.put('/update_model/1', json={'params': new_coef})
     assert response.status_code == 200
 
-    response = requests.get(url=base_url + '/model_coef/1')
+    response = app.get('/model_coef/1')
 
-    np.testing.assert_array_almost_equal(x=np.array(response.json()), y=new_coef,
+    np.testing.assert_array_almost_equal(x=np.array(response.get_json()), y=new_coef,
                                          decimal=test_digits, verbose=True)
 
 def test_create_model_endpoint():
     """
     Function checks create_model endpoint of the API
     """
-    models_before = requests.get(url=base_url + '/get_all_models')
+    models_before = app.get('/get_all_models')
 
     new_params = {'alpha': 1}
-    response = requests.put(url=base_url + '/create_model', json=new_params)
-    new_model_id = response.json()['model_id']
-    response = requests.delete(url=base_url + f'/delete_model/{new_model_id}')
+    response = app.put('/create_model', json=new_params)
+    new_model_id = response.get_json()['model_id']
+    response = app.delete(f'/delete_model/{new_model_id}')
 
     assert response.status_code == 200
-    assert f'model_{new_model_id}.pkl' not in models_before
+    assert f'model_{new_model_id}.pkl' not in models_before.get_json()
 
 
 def test_delete_endpoint():
@@ -130,10 +131,10 @@ def test_delete_endpoint():
     Function checks delete_model endpoint of the API
     """
     new_params = {'alpha': 1}
-    response = requests.put(url=base_url + '/create_model', json=new_params)
-    new_model_id = response.json()['model_id']
+    response = app.put('/create_model', json=new_params)
+    new_model_id = response.get_json()['model_id']
 
-    response = requests.delete(url=base_url + f'/delete_model/{new_model_id}')
+    response = app.delete(f'/delete_model/{new_model_id}')
 
     assert response.status_code == 200
     assert f'model_{new_model_id}.pkl' not in os.listdir()
