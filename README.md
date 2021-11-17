@@ -3,4 +3,5 @@
 # Softwarekonstruktion Webapp API
 
 Das Ziel von dieser Kompetenz ist es ein Continous Integration und Deployment aufzusetzen und dann zu verwenden.
-fasf
+
+Für die Kompetenz habe ich eine ML-API implementiert, die nun auf Heroku deployed wird. Dies geschieht mithilfe von CI/CD von Github Actions. Das Deployment geschieht von der Seite von Heroku, welches einen neuen Build macht, sobald die Tests erfolgreich bestanden wurden.
